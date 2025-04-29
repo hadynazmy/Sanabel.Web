@@ -415,3 +415,18 @@ h6,
 .copyright a:hover {
     color: var(--light);
 }
+
+img.profile-picture {
+    height: 350px;
+    width: 290px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+
+img.avatar {
+    height: 40px !important;
+    width: 40px !important;
+    object-fit: cover;
+    border-radius: 50%;
+}

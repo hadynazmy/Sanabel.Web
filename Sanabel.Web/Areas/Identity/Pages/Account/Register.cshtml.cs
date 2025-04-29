@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Net.Mail;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
@@ -18,109 +19,108 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using Sanabel.Web.Models;
 
 namespace Sanabel.Web.Areas.Identity.Pages.Account
 {
     public class RegisterModel : PageModel
     {
-        private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly IUserStore<IdentityUser> _userStore;
-        private readonly IUserEmailStore<IdentityUser> _emailStore;
-        private readonly ILogger<RegisterModel> _logger;
-        private readonly IEmailSender _emailSender;
+        // تعريف الخصائص اللازمة لإدارة تسجيل الدخول والمستخدمين وإرسال البريد الإلكتروني وتسجيل الأحداث.
+        private readonly SignInManager<ApplicationUser> _signInManager; // مسؤول عن إدارة تسجيل الدخول.
+        private readonly UserManager<ApplicationUser> _userManager; // مسؤول عن إدارة المستخدمين.
+        private readonly IUserStore<ApplicationUser> _userStore; // مسؤول عن تخزين بيانات المستخدم.
+        private readonly IUserEmailStore<ApplicationUser> _emailStore; // مسؤول عن تخزين البريد الإلكتروني.
+        private readonly ILogger<RegisterModel> _logger; // لتسجيل الأحداث.
+        private readonly IEmailSender _emailSender; // لإرسال رسائل البريد الإلكتروني.
 
+        // المُنشئ لتلقي الكائنات الضرورية من خلال حقن التبعيات.
         public RegisterModel(
-            UserManager<IdentityUser> userManager,
-            IUserStore<IdentityUser> userStore,
-            SignInManager<IdentityUser> signInManager,
+            UserManager<ApplicationUser> userManager,
+            IUserStore<ApplicationUser> userStore,
+            SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
             IEmailSender emailSender)
         {
-            _userManager = userManager;
-            _userStore = userStore;
-            _emailStore = GetEmailStore();
-            _signInManager = signInManager;
-            _logger = logger;
-            _emailSender = emailSender;
+            _userManager = userManager; // تهيئة كائن UserManager.
+            _userStore = userStore; // تهيئة كائن UserStore.
+            _emailStore = GetEmailStore(); // استدعاء وظيفة استرجاع EmailStore.
+            _signInManager = signInManager; // تهيئة كائن SignInManager.
+            _logger = logger; // تهيئة كائن Logger.
+            _emailSender = emailSender; // تهيئة كائن EmailSender.
         }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
+        // النموذج الذي يحتوي على بيانات الإدخال التي يدخلها المستخدم.
         [BindProperty]
         public InputModel Input { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
+        // رابط إعادة التوجيه بعد التسجيل.
         public string ReturnUrl { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
+        // قائمة بأنظمة تسجيل الدخول الخارجية (مثل Google أو Facebook).
         public IList<AuthenticationScheme> ExternalLogins { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
+        // تعريف الحقول اللازمة لتسجيل المستخدم.
         public class InputModel
         {
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
-            [Required]
-            [EmailAddress]
-            [Display(Name = "Email")]
-            public string Email { get; set; }
+            [Required] // الحقل مطلوب.
+            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 2)]
+            [Display(Name = "First Name")] // الاسم الأول.
+            public string FirstName { get; set; } // تخزين الاسم الأول.
 
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
-            [Required]
+            [Required] // الحقل مطلوب.
+            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 2)]
+            [Display(Name = "Last Name")] // اسم العائلة.
+            public string LastName { get; set; } // تخزين اسم العائلة.
+
+            [Required] // الحقل مطلوب.
+            [EmailAddress] // التحقق من صحة البريد الإلكتروني.
+            [Display(Name = "Email")] // البريد الإلكتروني.
+            public string Email { get; set; } // تخزين البريد الإلكتروني.
+
+            [Required] // الحقل مطلوب.
             [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
-            [DataType(DataType.Password)]
-            [Display(Name = "Password")]
-            public string Password { get; set; }
+            [DataType(DataType.Password)] // تعريف الحقل ككلمة مرور.
+            [Display(Name = "Password")] // كلمة المرور.
+            public string Password { get; set; } // تخزين كلمة المرور.
 
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
-            [DataType(DataType.Password)]
-            [Display(Name = "Confirm password")]
+            [DataType(DataType.Password)] // تعريف الحقل ككلمة مرور.
+            [Display(Name = "Confirm password")] // تأكيد كلمة المرور.
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
-            public string ConfirmPassword { get; set; }
+            public string ConfirmPassword { get; set; } // تخزين تأكيد كلمة المرور.
         }
 
-
+        // يتم استدعاؤها عند تحميل صفحة التسجيل.
         public async Task OnGetAsync(string returnUrl = null)
         {
-            ReturnUrl = returnUrl;
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            ReturnUrl = returnUrl; // تعيين رابط الإعادة إذا تم تحديده.
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList(); // جلب خيارات تسجيل الدخول الخارجية.
         }
 
+        // يتم استدعاؤها عند إرسال بيانات التسجيل من قبل المستخدم.
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            returnUrl ??= Url.Content("~/");
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            returnUrl ??= Url.Content("~/"); // تعيين الرابط الافتراضي إذا لم يتم تحديد رابط إعادة.
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList(); // جلب خيارات تسجيل الدخول الخارجية.
+
+            // تعديل الكود ليكون فقط مرة واحدة
             if (ModelState.IsValid)
             {
-                var user = CreateUser();
+                var user = new ApplicationUser
+                {
+                    UserName = new MailAddress(Input.Email).User,
+                    Email = Input.Email,
+                    FirstName = Input.FirstName,
+                    LastName = Input.LastName
+                };
 
-                await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
-                await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+                // لا حاجة لإنشاء المستخدم مرة أخرى في CreateUser
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
+
+                    await _userManager.AddToRoleAsync(user, "User");
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -144,37 +144,40 @@ namespace Sanabel.Web.Areas.Identity.Pages.Account
                         return LocalRedirect(returnUrl);
                     }
                 }
+
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
             }
 
-            // If we got this far, something failed, redisplay form
             return Page();
+
         }
 
-        private IdentityUser CreateUser()
+        // دالة لإنشاء كائن مستخدم جديد.
+        private ApplicationUser CreateUser()
         {
             try
             {
-                return Activator.CreateInstance<IdentityUser>();
+                return Activator.CreateInstance<ApplicationUser>(); // محاولة إنشاء الكائن.
             }
             catch
             {
-                throw new InvalidOperationException($"Can't create an instance of '{nameof(IdentityUser)}'. " +
-                    $"Ensure that '{nameof(IdentityUser)}' is not an abstract class and has a parameterless constructor, or alternatively " +
+                throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
+                    $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor, or alternatively " +
                     $"override the register page in /Areas/Identity/Pages/Account/Register.cshtml");
             }
         }
 
-        private IUserEmailStore<IdentityUser> GetEmailStore()
+        // جلب التخزين الخاص بالبريد الإلكتروني.
+        private IUserEmailStore<ApplicationUser> GetEmailStore()
         {
-            if (!_userManager.SupportsUserEmail)
+            if (!_userManager.SupportsUserEmail) // التحقق من دعم البريد الإلكتروني.
             {
-                throw new NotSupportedException("The default UI requires a user store with email support.");
+                throw new NotSupportedException("The default UI requires a user store with email support."); // إذا لم يكن البريد الإلكتروني مدعومًا.
             }
-            return (IUserEmailStore<IdentityUser>)_userStore;
+            return (IUserEmailStore<ApplicationUser>)_userStore; // إرجاع التخزين الخاص بالبريد الإلكتروني.
         }
     }
 }

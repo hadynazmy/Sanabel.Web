@@ -1,9 +1,17 @@
 ﻿@using Microsoft.AspNetCore.Identity
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
 
 @if (SignInManager.IsSignedIn(User))
 {
+    @if (UserManager.GetUserAsync(User).Result.ProfilePicture != null)
+    {
+        <li class="nav-item">
+            <img style="height:40px;width:40px;object-fit:cover;border-radius:50%;" alt="profile" 
+                    src="data:image/*;base64,@(Convert.ToBase64String(UserManager.GetUserAsync(User).Result.ProfilePicture))" />
+        </li>
+    }
+
     <div class="nav-item dropdown">
         <a class="nav-link dropdown-toggle text-light" href="#" data-bs-toggle="dropdown" aria-expanded="false">
             Hello @User.Identity?.Name!
