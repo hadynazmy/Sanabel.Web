@@ -19,11 +19,51 @@ namespace Sanabel.Web.Controllers
             _context = context;
         }
 
-        // GET: Products
-        public async Task<IActionResult> Index()
+        // ProductController.cs
+
+        public async Task<IActionResult> Index(string? searchTerm, int? subCategoryId, int page = 1)
         {
-            var applicationDbContext = _context.Products.Include(p => p.SubCategory);
-            return View(await applicationDbContext.ToListAsync());
+            int pageSize = 6;
+
+            var productsQuery = _context.Products
+                .Include(p => p.SubCategory)
+                .ThenInclude(sc => sc.Category)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                productsQuery = productsQuery.Where(p => p.Name.Contains(searchTerm));
+            }
+
+            if (subCategoryId.HasValue && subCategoryId.Value != 0)
+            {
+                productsQuery = productsQuery.Where(p => p.SubCategoryId == subCategoryId);
+            }
+
+            // ترتيب النتائج لتجنب مشاكل Skip/Take
+            productsQuery = productsQuery.OrderBy(p => p.Id);
+
+            int totalProducts = await productsQuery.CountAsync(); // إجمالي عدد المنتجات
+            var products = await productsQuery
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            int totalPages = (int)Math.Ceiling((double)totalProducts / pageSize);
+
+            // تمرير البيانات إلى View
+            ViewBag.TotalPages = totalPages;
+            ViewBag.CurrentPage = page;
+            ViewBag.SearchTerm = searchTerm;
+            ViewBag.CurrentSubCategoryId = subCategoryId ?? 0;
+            ViewBag.TotalProducts = totalProducts;
+            ViewBag.ProductsInPage = products.Count;
+
+            ViewBag.SubCategories = await _context.SubCategories
+                .Include(sc => sc.Category)
+                .ToListAsync();
+
+            return View(products);
         }
 
         // GET: Products/Details/5

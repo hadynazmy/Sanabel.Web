@@ -1,64 +1,168 @@
-﻿@model IEnumerable<Sanabel.Web.Models.Product>
-
+﻿@* Views/Products/Index.cshtml *@
+@model IEnumerable<Sanabel.Web.Models.Product>
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "قائمة المنتجات";
+
+    var subCategories = ViewBag.SubCategories as List<Sanabel.Web.Models.SubCategory>;
+    var searchTerm = ViewBag.SearchTerm as string;
+    var currentSubCategoryId = ViewBag.CurrentSubCategoryId as int?;
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+
+    var groupedCategories = subCategories?
+        .GroupBy(sc => sc.Category?.Name)
+        .ToDictionary(g => g.Key, g => g.ToList());
 }
 
-<h1>Products List</h1>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Create New</a>
+<h1 class="mb-4">قائمة المنتجات</h1>
+<p class="text-muted">
+    تم العثور على <strong>@ViewBag.TotalProducts</strong> منتج،
+    يعرض <strong>@ViewBag.ProductsInPage</strong> في هذه الصفحة
 </p>
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Price)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ImageUrl)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.SubCategory)
-            </th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
+@if (User.IsInRole("Admin"))
+{
+    <div class="mb-3 text-end">
+        <a asp-action="Create" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> إضافة منتج جديد
+        </a>
+    </div>
+}
+
+<!-- قائمة التصنيفات -->
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <a class="btn btn-outline-primary @(currentSubCategoryId == null ? "active" : "")"
+       asp-action="Index"
+       asp-route-searchTerm="@searchTerm">
+        الكل
+    </a>
+
+    @if (groupedCategories != null)
+    {
+        foreach (var category in groupedCategories)
         {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Name)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Description)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Price)
-                </td>
-                <td>
-                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+            <div class="nav-item dropdown">
+                <a href="#" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                    @category.Key
+                </a>
+                <div class="dropdown-menu">
+                    @foreach (var sub in category.Value)
                     {
-                        <img src="@item.ImageUrl" alt="Product Image" width="100" height="100" class="img-thumbnail" />
+                        <a class="dropdown-item @(currentSubCategoryId == sub.Id ? "active" : "")"
+                           asp-action="Index"
+                           asp-route-subCategoryId="@sub.Id"
+                           asp-route-searchTerm="@searchTerm">
+                            @sub.Name
+                        </a>
                     }
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.SubCategory.Name)
-                </td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Details</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-            </tr>
+                </div>
+            </div>
         }
-    </tbody>
-</table>
+    }
+</div>
+
+<!-- عرض المنتجات -->
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    @foreach (var item in Model)
+    {
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                {
+                    <img src="@item.ImageUrl" class="card-img-top" alt="@item.Name" style="height: 250px; object-fit: cover;" />
+                }
+                else
+                {
+                    <img src="~/img/no-image.png" class="card-img-top" alt="No Image" style="height: 250px; object-fit: cover;" />
+                }
+
+                <div class="card-body text-center">
+                    <h5 class="card-title">@item.Name</h5>
+                    <p class="card-text text-muted">ج.م @item.Price.ToString("0.00")</p>
+                </div>
+
+                <div class="card-footer d-flex justify-content-center gap-2 flex-wrap">
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">تعديل</a>
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">تفاصيل</a>
+                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal-@item.Id">
+                            حذف
+                        </button>
+                    }
+
+                    <!-- زر إضافة إلى السلة (بدون Refresh) -->
+                    <button type="button" class="btn btn-sm btn-outline-success"
+                            title="أضف إلى السلة"
+                            onclick="addToCart(@item.Id)">
+                        <i class="bi bi-cart-plus"></i>
+                    </button>
+                </div>
+
+                <!-- Modal الحذف -->
+                <div class="modal fade" id="deleteModal-@item.Id" tabindex="-1" aria-labelledby="deleteModalLabel-@item.Id" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title" id="deleteModalLabel-@item.Id">تأكيد الحذف</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                            </div>
+                            <div class="modal-body">
+                                هل أنت متأكد أنك تريد حذف المنتج "<strong>@item.Name</strong>"؟
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                                <form asp-action="Delete" asp-route-id="@item.Id" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-danger">نعم، احذف</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    }
+</div>
+
+<!-- الترقيم -->
+@if (totalPages > 1)
+{
+    <nav aria-label="Pagination">
+        <ul class="pagination justify-content-center mt-4">
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <li class="page-item @(currentPage == i ? "active" : "")">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-page="@i"
+                       var currentSubCategoryId=ViewBag.CurrentSubCategoryId !=null ? Convert.ToInt32(ViewBag.CurrentSubCategoryId) : 0;
+                       asp-route-searchTerm="@searchTerm">
+                        @i
+                    </a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+
+<script>
+    function addToCart(productId) {
+        fetch(`/Cart/AddToCart?productId=${productId}`, {
+            method: 'GET'
+        })
+        .then(response => {
+            if (response.ok) {
+                alert("تمت إضافة المنتج إلى السلة");
+            } else {
+                alert("حدث خطأ أثناء الإضافة!");
+            }
+        })
+        .catch(error => {
+            console.error("خطأ في الإضافة إلى السلة:", error);
+        });
+    }
+</script>

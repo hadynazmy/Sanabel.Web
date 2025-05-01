@@ -72,14 +72,25 @@
             <div class="navbar-nav mx-auto p-4 p-lg-0">
                 <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
 
-
-                <a class="nav-item nav-link" asp-area="" asp-controller="Categories" asp-action="Index">Categories</a>
-                <a class="nav-item nav-link" asp-area="" asp-controller="SubCategories" asp-action="Index">Sub Categories</a>
                 <a class="nav-item nav-link" asp-area="" asp-controller="Products" asp-action="Index">Products</a>
-                <a class="nav-item nav-link"  asp-controller="Roles" asp-action="Index">Manage Roles</a>
-                <a class="nav-item nav-link"  asp-controller="Users" asp-action="Index">Manage Users</a>
+
+                @if (User.IsInRole("Admin"))
+                {
+                    <a class="nav-item nav-link" asp-area="" asp-controller="Categories" asp-action="Index">Categories</a>
+                    <a class="nav-item nav-link" asp-area="" asp-controller="SubCategories" asp-action="Index">Sub Categories</a>
+                    <a class="nav-item nav-link" asp-controller="Roles" asp-action="Index">Manage Roles</a>
+                    <a class="nav-item nav-link" asp-controller="Users" asp-action="Index">Manage Users</a>
+                }
+                
             </div>
 
+            <!-- زر السلة -->
+            <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-primary position-relative">
+                <i class="bi bi-cart3"></i> السلة
+                <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    @Context.Session.GetInt32("CartCount") 
+                </span>
+            </a>
 
             <!-- Start Login/Register -->
             <div class="d-flex align-items-center">

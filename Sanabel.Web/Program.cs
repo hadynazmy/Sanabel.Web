@@ -21,13 +21,17 @@ namespace Sanabel.Web
 
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-            builder.Services.AddIdentity<ApplicationUser,IdentityRole>()
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultUI()
                 .AddDefaultTokenProviders();
 
             builder.Services.AddControllersWithViews();
 
+            // تفعيل الـ Session قبل بناء التطبيق
+            builder.Services.AddSession();
+
+            // بناء التطبيق
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -48,6 +52,9 @@ namespace Sanabel.Web
 
             app.UseAuthentication(); // ✅ Authentication لازم قبل Authorization
             app.UseAuthorization();
+
+            // تفعيل الـ Session بعد بناء التطبيق
+            app.UseSession();
 
             // ✅ Route لدعم الـ Areas
             app.MapControllerRoute(

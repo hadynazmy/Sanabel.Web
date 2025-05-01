@@ -1,0 +1,136 @@
+﻿@model List<CartItem>
+@{
+    ViewData["Title"] = "سلة المشتريات";
+    var total = 0m;
+}
+
+<h2 class="mb-4">سلة المشتريات</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">السلة فارغة.</div>
+}
+else
+{
+    <form method="post" asp-action="UpdateCart">
+        <table class="table table-bordered text-center align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>المنتج</th>
+                    <th>السعر الفردي</th>
+                    <th>الكمية</th>
+                    <th>الإجمالي</th>
+                    <th>الإجراء</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    var subtotal = item.Product.Price * item.Quantity;
+                    total += subtotal;
+                    <tr>
+                        <td>@item.Product.Name</td>
+                        <td>@item.Product.Price ج.م</td>
+                        <td style="width: 120px;">
+                            <input type="number"
+                                   name="quantities[@item.ProductId]"
+                                   value="@item.Quantity"
+                                   min="1"
+                                   class="form-control text-center cart-quantity"
+                                   data-productid="@item.ProductId" />
+                        </td>
+                        <td class="item-price" data-price="@item.Product.Price">@subtotal.ToString("0.00")</td>
+                        <td>
+                            <button type="button"
+                                    class="btn btn-sm btn-danger remove-item"
+                                    data-productid="@item.ProductId">
+                                حذف
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="d-flex justify-content-between align-items-center my-3">
+            <strong class="fs-5">الإجمالي الكلي: <span id="totalPrice">@total.ToString("0.00") ج.م</span></strong>
+            <div>
+                <button type="submit" class="btn btn-primary">تحديث السلة</button>
+                <a asp-action="ClearCart" class="btn btn-warning">مسح السلة</a>
+                <a asp-controller="Products" asp-action="Index" class="btn btn-success">تسوق المزيد</a>
+            </div>
+        </div>
+    </form>
+}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // تحديث الكمية عند التغيير
+    $(document).on('change', '.cart-quantity', function () {
+        var productId = $(this).data('productid');
+        var quantity = $(this).val();
+
+        $.ajax({
+            type: 'POST',
+            url: '@Url.Action("UpdateCart", "Cart")',
+            data: {
+                productId: productId,
+                quantity: quantity
+            },
+            success: function (response) {
+                updateCartCount(response.cartCount);
+                updateTotalPrice();
+            },
+            error: function () {
+                alert('حدث خطأ أثناء تحديث السلة');
+            }
+        });
+    });
+
+    // تحديث عدد العناصر في الـ Navbar
+    function updateCartCount(cartCount) {
+        $('#cartCount').text(cartCount);
+    }
+
+    // تحديث السعر الكلي والإجماليات
+    function updateTotalPrice() {
+        var total = 0;
+        $('tbody tr').each(function () {
+            var price = parseFloat($(this).find('.item-price').data('price'));
+            var quantity = parseInt($(this).find('.cart-quantity').val());
+
+            if (!isNaN(price) && !isNaN(quantity)) {
+                var subtotal = price * quantity;
+                $(this).find('.item-price').text(subtotal.toFixed(2));
+                total += subtotal;
+            }
+        });
+
+        $('#totalPrice').text(total.toFixed(2) + ' ج.م');
+    }
+
+    // حذف منتج من السلة
+    $(document).on('click', '.remove-item', function () {
+        var productId = $(this).data('productid');
+        var row = $(this).closest('tr');
+
+        $.ajax({
+            type: 'POST',
+            url: '@Url.Action("RemoveFromCart", "Cart")',
+            data: { productId: productId },
+            success: function (response) {
+                updateCartCount(response.cartCount);
+                row.remove();
+                updateTotalPrice();
+
+                // إظهار رسالة في حال أصبحت السلة فارغة
+                if ($('tbody tr').length === 0) {
+                    location.reload();
+                }
+            },
+            error: function () {
+                alert('حدث خطأ أثناء حذف المنتج');
+            }
+        });
+    });
+</script>
