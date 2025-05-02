@@ -140,23 +140,21 @@
                 }
             });
 
-            // تغيير الحالة
+            // تغيير الحالة بدون تأكيد
             $('#ordersTable').on('click', '.change-status', function () {
                 var orderId = $(this).data('id');
-                if (confirm('هل أنت متأكد من تغيير حالة الطلب؟')) {
-                    $.ajax({
-                        url: '@Url.Action("ChangeStatus", "Orders")',
-                        type: 'POST',
-                        data: { id: orderId },
-                        success: function () {
-                            table.ajax.reload(null, false);
-                            alert('تم تغيير الحالة بنجاح');
-                        },
-                        error: function () {
-                            alert('حدث خطأ أثناء تغيير الحالة');
-                        }
-                    });
-                }
+
+                $.ajax({
+                    url: '@Url.Action("ChangeStatus", "Orders")',
+                    type: 'POST',
+                    data: { id: orderId },
+                    success: function () {
+                        table.ajax.reload(null, false);
+                    },
+                    error: function () {
+                        alert('حدث خطأ أثناء تغيير الحالة');
+                    }
+                });
             });
 
             // حذف الطلب - فتح المودال

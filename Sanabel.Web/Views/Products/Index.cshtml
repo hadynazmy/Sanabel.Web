@@ -158,13 +158,29 @@
         })
         .then(response => {
             if (response.ok) {
-                alert("تمت إضافة المنتج إلى السلة");
+                Swal.fire({
+                    title: 'تمت الإضافة!',
+                    text: 'تمت إضافة المنتج إلى السلة بنجاح',
+                    icon: 'success',
+                    confirmButtonText: 'حسنًا'
+                });
             } else {
-                alert("حدث خطأ أثناء الإضافة!");
+                Swal.fire({
+                    title: 'خطأ!',
+                    text: 'حدث خطأ أثناء الإضافة إلى السلة',
+                    icon: 'error',
+                    confirmButtonText: 'حسنًا'
+                });
             }
         })
         .catch(error => {
             console.error("خطأ في الإضافة إلى السلة:", error);
+            Swal.fire({
+                title: 'خطأ!',
+                text: 'تعذر الاتصال بالخادم',
+                icon: 'error',
+                confirmButtonText: 'موافق'
+            });
         });
     }
 </script>
