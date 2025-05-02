@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Sanabel.Web.Data;
+using Sanabel.Web.Helpers; // تأكد من إضافة هذه الجملة للوصول إلى CartService
 using Sanabel.Web.Models;
 
 namespace Sanabel.Web
@@ -25,6 +25,15 @@ namespace Sanabel.Web
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultUI()
                 .AddDefaultTokenProviders();
+
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = "/Identity/Account/Login";
+                options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+            });
+
+            // إضافة CartService إلى DI
+            builder.Services.AddScoped<CartService>();
 
             builder.Services.AddControllersWithViews();
 

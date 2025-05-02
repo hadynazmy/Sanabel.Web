@@ -61,11 +61,28 @@ else
             </div>
         </div>
     </form>
+
+    <!-- فورم تأكيد الطلب مع خانة الملاحظات والعنوان -->
+    <form asp-controller="Orders" asp-action="ConfirmOrder" method="post" class="mt-4">
+        @Html.AntiForgeryToken()
+
+        <div class="mb-3">
+            <label for="Address" class="form-label">العنوان</label>
+            <input type="text" name="Address" id="Address" class="form-control" placeholder="أدخل عنوان التوصيل" required />
+        </div>
+
+        <div class="mb-3">
+            <label for="Notes" class="form-label">ملاحظات</label>
+            <textarea name="Notes" id="Notes" class="form-control" rows="3" placeholder="هل لديك تعليمات خاصة؟ (اختياري)"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-outline-success">تأكيد الطلب</button>
+    </form>
+
 }
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    // تحديث الكمية عند التغيير
     $(document).on('change', '.cart-quantity', function () {
         var productId = $(this).data('productid');
         var quantity = $(this).val();
@@ -87,12 +104,10 @@ else
         });
     });
 
-    // تحديث عدد العناصر في الـ Navbar
     function updateCartCount(cartCount) {
         $('#cartCount').text(cartCount);
     }
 
-    // تحديث السعر الكلي والإجماليات
     function updateTotalPrice() {
         var total = 0;
         $('tbody tr').each(function () {
@@ -109,7 +124,6 @@ else
         $('#totalPrice').text(total.toFixed(2) + ' ج.م');
     }
 
-    // حذف منتج من السلة
     $(document).on('click', '.remove-item', function () {
         var productId = $(this).data('productid');
         var row = $(this).closest('tr');
@@ -123,7 +137,6 @@ else
                 row.remove();
                 updateTotalPrice();
 
-                // إظهار رسالة في حال أصبحت السلة فارغة
                 if ($('tbody tr').length === 0) {
                     location.reload();
                 }

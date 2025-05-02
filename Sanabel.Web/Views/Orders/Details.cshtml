@@ -1,0 +1,54 @@
+﻿@model Sanabel.Web.Models.Order
+
+@{
+    ViewData["Title"] = "تفاصيل الطلب";
+}
+
+<h2>تفاصيل الطلب</h2>
+
+<div class="mb-3">
+    <strong>العميل:</strong> @Model.User?.UserName <br />
+    <strong>رقم الموبايل:</strong> @Model.User?.PhoneNumber  @Model.PhoneNumber <br />
+    <strong>التاريخ:</strong> @Model.CreatedAt.ToString("yyyy-MM-dd HH:mm") <br />
+    <strong>إجمالي السعر:</strong> @Model.TotalAmount.ToString("0.00") ج.م <br />
+    <strong>الحالة:</strong> @Model.Status <br />
+    <strong>الملاحظات:</strong> @Model.Notes <br />
+    <strong>الموقع:</strong> @Model.Location "
+</div>
+
+
+<h4>عناصر الطلب:</h4>
+<table class="table">
+    <thead>
+        <tr>
+            <th>المنتج</th>
+            <th>الكمية</th>
+            <th>السعر الفردي</th>
+            <th>الإجمالي</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Items)
+        {
+            <tr>
+                <td>@item.Product?.Name</td>
+                <td>@item.Quantity</td>
+                <td>@item.UnitPrice.ToString("0.00")</td>
+                <td>@(item.Quantity * item.UnitPrice)</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- أزرار تغيير الحالة -->
+<form asp-action="UpdateStatus" method="post" class="d-inline">
+    <input type="hidden" name="id" value="@Model.Id" />
+    <input type="hidden" name="status" value="Accepted" />
+    <button type="submit" class="btn btn-success">مقبولة</button>
+</form>
+
+<form asp-action="UpdateStatus" method="post" class="d-inline">
+    <input type="hidden" name="id" value="@Model.Id" />
+    <input type="hidden" name="status" value="Rejected" />
+    <button type="submit" class="btn btn-danger">مرفوضة</button>
+</form>

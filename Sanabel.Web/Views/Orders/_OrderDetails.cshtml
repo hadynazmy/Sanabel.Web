@@ -1,0 +1,17 @@
+﻿@model Sanabel.Web.Models.Order  
+
+<div>
+    <h5>Order ID: @Model.Id</h5>
+    <p>User: @Model.User.UserName</p>
+    <p>Status: @Model.Status</p>
+    <p>Total Amount: @Model.TotalAmount</p>
+    <p>Created At: @Model.CreatedAt</p>
+
+    <h6>Items:</h6>
+    <ul>
+        @foreach (var item in Model.Items)
+        {
+            <li>@item.Product.Name - Quantity: @item.Quantity</li>
+        }
+    </ul>
+</div>

@@ -1,0 +1,42 @@
+﻿@model IEnumerable<Sanabel.Web.Models.Order>
+
+@{
+    ViewData["Title"] = "الطلبات";
+}
+
+<h1>الطلبات</h1>
+
+@if (Model.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>المستخدم</th>
+                <th>تاريخ الإنشاء</th>
+                <th>المبلغ الكلي</th>
+                <th>الحالة</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in Model)
+            {
+                <tr>
+                    <td>@order.User.FirstName @order.User.LastName</td>
+                    <td>@order.CreatedAt</td>
+                    <td>@order.TotalAmount</td>
+                    <td>@order.Status</td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@order.Id">عرض التفاصيل</a> |
+                        <a asp-action="Edit" asp-route-id="@order.Id">تعديل</a> |
+                        <a asp-action="Delete" asp-route-id="@order.Id">حذف</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>لا توجد طلبات.</p>
+}
