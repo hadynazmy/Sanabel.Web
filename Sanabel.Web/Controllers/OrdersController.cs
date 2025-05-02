@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -12,6 +7,7 @@ using Sanabel.Web.Data;
 using Sanabel.Web.Enum;
 using Sanabel.Web.Models;
 using Sanabel.Web.ViewModels;
+using System.Security.Claims;
 
 namespace Sanabel.Web.Controllers
 {
@@ -20,11 +16,12 @@ namespace Sanabel.Web.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-
-        public OrdersController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        private readonly ILogger<OrdersController> _logger;
+        public OrdersController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, ILogger<OrdersController> logger)
         {
             _context = context;
             _userManager = userManager;
+            _logger = logger;
         }
 
 
@@ -69,7 +66,7 @@ namespace Sanabel.Web.Controllers
             return View();
         }
 
-        
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,UserId,CreatedAt,TotalAmount,Status")] Order order)
@@ -224,30 +221,102 @@ namespace Sanabel.Web.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        [HttpGet]
+        public IActionResult GetTotalOrdersCount()
+        {
+            try
+            {
+                var count = _context.Orders.Count();
+                return Content(count.ToString());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting total orders count");
+                return Content("0");
+            }
+        }
+
+        [HttpPost]
         public IActionResult GetOrdersData()
         {
-            var orders = _context.Orders
-                .Include(o => o.User)
-                .Include(o => o.Items)
-                .ToList();  // أو يمكنك استخدام طريقة `ToListAsync` إذا كنت تريد التعامل مع العمليات غير المتزامنة
+            try
+            {
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
 
-            return Json(orders);  // إرجاع البيانات بصيغة JSON
+                var query = _context.Orders.Include(o => o.User).AsQueryable();
+
+                int recordsTotal = query.Count();
+
+                var data = query
+                    .OrderByDescending(o => o.CreatedAt)
+                    .Skip(start != null ? Convert.ToInt32(start) : 0)
+                    .Take(length != null ? Convert.ToInt32(length) : 10)
+                    .Select(o => new
+                    {
+                        id = o.Id,
+                        user = new { o.User.FirstName, o.User.LastName },
+                        createdAt = o.CreatedAt,
+                        totalAmount = o.TotalAmount,
+                        status = o.Status.ToString()
+                    })
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = Convert.ToInt32(draw),
+                    recordsTotal = recordsTotal,
+                    recordsFiltered = recordsTotal,
+                    data = data
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetOrdersData");
+                return Json(new
+                {
+                    draw = 0,
+                    recordsTotal = 0,
+                    recordsFiltered = 0,
+                    data = new List<object>()
+                });
+            }
         }
 
         [HttpPost]
         public async Task<IActionResult> ChangeStatus(int id)
         {
-            var order = await _context.Orders.FindAsync(id);
-            if (order == null) return NotFound();
+            try
+            {
+                var order = await _context.Orders.FindAsync(id);
+                if (order == null)
+                {
+                    _logger?.LogWarning("Order not found with ID: {OrderId}", id);
+                    return NotFound();
+                }
 
-            // تغيير الحالة بين Accepted و Rejected
-            order.Status = order.Status == OrderStatus.Accepted
-                ? OrderStatus.Rejected
-                : OrderStatus.Accepted;
+                order.Status = order.Status == OrderStatus.Accepted
+                    ? OrderStatus.Rejected
+                    : OrderStatus.Accepted;
 
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
 
-            return Ok();  // إرجاع حالة 200 OK بعد التحديث
+                _logger?.LogInformation("Order status changed for ID: {OrderId}, New Status: {Status}",
+                    id, order.Status);
+
+                return Ok(new
+                {
+                    newStatus = order.Status.ToString(),
+                    buttonText = order.Status == OrderStatus.Accepted ? "مقبولة" : "مرفوضة",
+                    buttonClass = order.Status == OrderStatus.Accepted ? "btn-success" : "btn-danger"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error changing status for order ID: {OrderId}", id);
+                return StatusCode(500, "حدث خطأ أثناء تغيير حالة الطلب");
+            }
         }
 
         private bool OrderExists(int id)

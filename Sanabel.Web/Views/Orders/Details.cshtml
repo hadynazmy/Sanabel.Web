@@ -1,54 +1,108 @@
-﻿@model Sanabel.Web.Models.Order
+﻿@using Sanabel.Web.Enum
+@model Sanabel.Web.Models.Order
 
 @{
     ViewData["Title"] = "تفاصيل الطلب";
 }
 
-<h2>تفاصيل الطلب</h2>
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h2 class="mb-0">تفاصيل الطلب</h2>
+    </div>
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <strong class="d-block">العميل:</strong>
+                    <span>@Model.User?.UserName</span>
+                </div>
+                <div class="mb-3">
+                    <strong class="d-block">رقم الموبايل:</strong>
+                    <span>@Model.User?.PhoneNumber @Model.PhoneNumber</span>
+                </div>
+                <div class="mb-3">
+                    <strong class="d-block">التاريخ:</strong>
+                    <span>@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <strong class="d-block">إجمالي السعر:</strong>
+                    <span>@Model.TotalAmount.ToString("0.00") ج.م</span>
+                </div>
+                <div class="mb-3">
+                    <strong class="d-block">الحالة:</strong>
+                    <span class="badge @(Model.Status == OrderStatus.Accepted ? "bg-success" : "bg-danger")">
+                        @Model.Status
+                    </span>
+                </div>
+                <div class="mb-3">
+                    <strong class="d-block">الملاحظات:</strong>
+                    <span>@Model.Notes</span>
+                </div>
+                <div class="mb-3">
+                    <strong class="d-block">الموقع:</strong>
+                    <span>@Model.Location</span>
+                </div>
+            </div>
+        </div>
 
-<div class="mb-3">
-    <strong>العميل:</strong> @Model.User?.UserName <br />
-    <strong>رقم الموبايل:</strong> @Model.User?.PhoneNumber  @Model.PhoneNumber <br />
-    <strong>التاريخ:</strong> @Model.CreatedAt.ToString("yyyy-MM-dd HH:mm") <br />
-    <strong>إجمالي السعر:</strong> @Model.TotalAmount.ToString("0.00") ج.م <br />
-    <strong>الحالة:</strong> @Model.Status <br />
-    <strong>الملاحظات:</strong> @Model.Notes <br />
-    <strong>الموقع:</strong> @Model.Location "
+        <h4 class="mb-3">عناصر الطلب:</h4>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="text-center">المنتج</th>
+                        <th class="text-center">الكمية</th>
+                        <th class="text-center">السعر الفردي</th>
+                        <th class="text-center">الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td class="text-center">@item.Product?.Name</td>
+                            <td class="text-center">@item.Quantity</td>
+                            <td class="text-center">@item.UnitPrice.ToString("0.00") ج.م</td>
+                            <td class="text-center">@((item.Quantity * item.UnitPrice).ToString("0.00")) ج.م</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="table-active">
+                        <td colspan="3" class="text-end fw-bold">المجموع الكلي:</td>
+                        <td class="text-center fw-bold">@Model.TotalAmount.ToString("0.00") ج.م</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="mt-4">
+            <a asp-action="Index" class="btn btn-primary">
+                العودة إلى قائمة الطلبات
+            </a>
+        </div>
+    </div>
 </div>
 
+<style>
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
 
-<h4>عناصر الطلب:</h4>
-<table class="table">
-    <thead>
-        <tr>
-            <th>المنتج</th>
-            <th>الكمية</th>
-            <th>السعر الفردي</th>
-            <th>الإجمالي</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.Items)
-        {
-            <tr>
-                <td>@item.Product?.Name</td>
-                <td>@item.Quantity</td>
-                <td>@item.UnitPrice.ToString("0.00")</td>
-                <td>@(item.Quantity * item.UnitPrice)</td>
-            </tr>
-        }
-    </tbody>
-</table>
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
 
-<!-- أزرار تغيير الحالة -->
-<form asp-action="UpdateStatus" method="post" class="d-inline">
-    <input type="hidden" name="id" value="@Model.Id" />
-    <input type="hidden" name="status" value="Accepted" />
-    <button type="submit" class="btn btn-success">مقبولة</button>
-</form>
+    .table th {
+        font-weight: 600;
+        white-space: nowrap;
+    }
 
-<form asp-action="UpdateStatus" method="post" class="d-inline">
-    <input type="hidden" name="id" value="@Model.Id" />
-    <input type="hidden" name="status" value="Rejected" />
-    <button type="submit" class="btn btn-danger">مرفوضة</button>
-</form>
+    .badge {
+        font-size: 0.9rem;
+        padding: 0.35em 0.65em;
+    }
+</style>
