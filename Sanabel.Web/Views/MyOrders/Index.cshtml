@@ -1,0 +1,105 @@
+﻿@model List<Sanabel.Web.Models.Order>
+
+@{
+    ViewData["Title"] = "طلباتي";
+}
+
+<h2>طلباتي</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Order ID</th>
+            <th>Created At</th>
+            <th>Status</th>
+            <th>Total Amount</th>
+
+            <th>الإجراءات</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var order in Model)
+        {
+            <tr>
+                <td>@order.Id</td>
+                <td>@order.CreatedAt.ToString("yyyy-MM-dd")</td>
+                <td>
+                    @switch (order.Status)
+                    {
+                        case Sanabel.Web.Enum.OrderStatus.Accepted:
+                            <span class="badge bg-success" style="cursor:pointer;" onclick="openDetailsSwal(@order.Id)">جاري تحضير طلبك</span>
+                            break;
+                        case Sanabel.Web.Enum.OrderStatus.Pending:
+                            <span class="badge bg-warning">قيد الانتظار</span>
+                            break;
+                        case Sanabel.Web.Enum.OrderStatus.Rejected:
+                            <span class="badge bg-danger">مرفوضة</span>
+                            break;
+                        default:
+                            <span class="badge bg-secondary">غير معروف</span>
+                            break;
+                    }
+                </td>
+                <td>@order.TotalAmount ج.م</td>
+              
+                <td>
+                    <a href="@Url.Action("Details", "MyOrders", new { id = order.Id })" class="btn btn-info">عرض التفاصيل</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function openDetailsSwal(orderId) {
+            Swal.fire({
+                title: 'تفاصيل الدفع',
+                html:
+                    '<input type="number" id="shipping" class="swal2-input" placeholder="قيمة الشحن">' +
+                    '<input type="number" id="deposit" class="swal2-input" placeholder="الديبوزيت">' +
+                    '<input type="file" id="paymentImage" class="swal2-file">',
+                confirmButtonText: 'حفظ',
+                showCancelButton: true,
+                focusConfirm: false,
+                preConfirm: () => {
+                    const shipping = document.getElementById('shipping').value;
+                    const deposit = document.getElementById('deposit').value;
+                    const fileInput = document.getElementById('paymentImage');
+                    const paymentImage = fileInput.files[0];
+
+                    if (!shipping || !deposit || !paymentImage) {
+                        Swal.showValidationMessage('كل الحقول مطلوبة');
+                        return false;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('OrderId', orderId);
+                    formData.append('ShippingCost', shipping);
+                    formData.append('DepositAmount', deposit);
+                    formData.append('PaymentImage', paymentImage);
+
+                    return fetch('/MyOrders/UpdateOrderDetails', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(response.statusText);
+                        }
+                        return response.json();
+                    })
+                    .catch(error => {
+                        Swal.showValidationMessage(`فشل الطلب: ${error}`);
+                    });
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire('تم الحفظ بنجاح!', '', 'success')
+                        .then(() => location.reload()); // لإعادة تحميل الصفحة بعد الحفظ
+                }
+            });
+        }
+    </script>
+}

@@ -18,6 +18,9 @@
         </a>
         <div class="dropdown-menu dropdown-menu-end">
             <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">Manage Account</a>
+            <a class="dropdown-item" asp-controller="MyOrders" asp-action="Index">
+                <i class="bi bi-list-check me-2"></i>طلباتي
+            </a>
             <form class="dropdown-item" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
                 <button type="submit" class="btn btn-link text-dark p-0 m-0">Logout</button>
             </form>

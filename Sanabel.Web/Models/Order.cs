@@ -16,6 +16,10 @@ namespace Sanabel.Web.Models
         public string? Notes { get; set; }
         public string? Location { get; set; } // ممكن يكون عنوان أو لوكيشن GPS
         public string? PhoneNumber { get; set; } // إذا لم يكن ضمن ApplicationUser وتريد نسخه في الطلب
-
+        public decimal ShippingCost { get; internal set; }
+        public decimal DepositAmount { get; internal set; }
+        public byte[]? PaymentImage { get; set; } // nullable
+        public string? PaymentImageName { get; set; }
+        public string? PaymentImageType { get; set; }
     }
 }

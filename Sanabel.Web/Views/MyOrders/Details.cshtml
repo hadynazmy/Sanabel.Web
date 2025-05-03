@@ -1,0 +1,31 @@
+﻿@model Sanabel.Web.Models.Order
+
+@{
+    ViewData["Title"] = "Order Details";
+}
+
+<h2>تفاصيل الطلب رقم - @Model.Id</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Unit Price</th>
+            <th>Total Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Items)
+        {
+            <tr>
+                <td>@item.Product.Name</td>
+                <td>@item.Quantity</td>
+                <td>@item.UnitPrice ج.م</td>
+                <td>@(item.Quantity * item.UnitPrice) ج.م</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a href="@Url.Action("Index", "MyOrders")" class="btn btn-primary">الرجوع</a> <!-- تم تعديل الرابط هنا -->

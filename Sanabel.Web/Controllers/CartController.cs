@@ -10,6 +10,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Cors.Infrastructure;
+using Sanabel.Web.Services;
 
 namespace Sanabel.Web.Controllers
 {
@@ -19,12 +20,16 @@ namespace Sanabel.Web.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly CartService _cartService;
+        private readonly ILogger<CartController> _logger;
 
-        public CartController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, CartService cartService)
+
+        public CartController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, CartService cartService, 
+            ILogger<CartController> logger)
         {
             _context = context;
             _userManager = userManager;
             _cartService = cartService;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -103,25 +108,22 @@ namespace Sanabel.Web.Controllers
             return Redirect(Request.Headers["Referer"].ToString());
         }
 
-        [HttpPost]
-        public async Task<IActionResult> UpdateCart(int productId, int quantity)
+        // إضافة هذا الإكشن للحصول على عدد العناصر في السلة
+        [HttpGet]
+        public async Task<IActionResult> GetCartCount()
         {
-            var userId = _userManager.GetUserId(User);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Json(new { count = 0 });
+            }
+
             var cart = await _context.Carts
                 .Include(c => c.Items)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
-            if (cart == null) return NotFound();
-
-            var item = cart.Items.FirstOrDefault(i => i.ProductId == productId);
-            if (item != null)
-            {
-                item.Quantity = quantity;
-                await _context.SaveChangesAsync();
-            }
-
-            int cartCount = cart.Items.Sum(i => i.Quantity);
-            return Json(new { cartCount });
+            var count = cart?.Items.Sum(i => i.Quantity) ?? 0;
+            return Json(new { count });
         }
 
         [HttpPost]

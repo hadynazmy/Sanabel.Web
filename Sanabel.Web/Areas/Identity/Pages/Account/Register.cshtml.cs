@@ -62,31 +62,38 @@ namespace Sanabel.Web.Areas.Identity.Pages.Account
         // تعريف الحقول اللازمة لتسجيل المستخدم.
         public class InputModel
         {
-            [Required] // الحقل مطلوب.
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 2)]
-            [Display(Name = "First Name")] // الاسم الأول.
-            public string FirstName { get; set; } // تخزين الاسم الأول.
+            [Required]
+            [Display(Name = "First Name")]
+            public string FirstName { get; set; }
 
-            [Required] // الحقل مطلوب.
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 2)]
-            [Display(Name = "Last Name")] // اسم العائلة.
-            public string LastName { get; set; } // تخزين اسم العائلة.
+            [Required]
+            [Display(Name = "Last Name")]
+            public string LastName { get; set; }
 
-            [Required] // الحقل مطلوب.
-            [EmailAddress] // التحقق من صحة البريد الإلكتروني.
-            [Display(Name = "Email")] // البريد الإلكتروني.
-            public string Email { get; set; } // تخزين البريد الإلكتروني.
+            [Required]
+            [Display(Name = "Full Name")]
+            public string FullName { get; set; }
 
-            [Required] // الحقل مطلوب.
+            [Required]
+            [Phone]
+            [Display(Name = "Phone Number")]
+            public string PhoneNumber { get; set; }
+
+            [Required]
+            [EmailAddress]
+            [Display(Name = "Email")]
+            public string Email { get; set; }
+
+            [Required]
             [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
-            [DataType(DataType.Password)] // تعريف الحقل ككلمة مرور.
-            [Display(Name = "Password")] // كلمة المرور.
-            public string Password { get; set; } // تخزين كلمة المرور.
+            [DataType(DataType.Password)]
+            [Display(Name = "Password")]
+            public string Password { get; set; }
 
-            [DataType(DataType.Password)] // تعريف الحقل ككلمة مرور.
-            [Display(Name = "Confirm password")] // تأكيد كلمة المرور.
+            [DataType(DataType.Password)]
+            [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
-            public string ConfirmPassword { get; set; } // تخزين تأكيد كلمة المرور.
+            public string ConfirmPassword { get; set; }
         }
 
         // يتم استدعاؤها عند تحميل صفحة التسجيل.
@@ -107,11 +114,14 @@ namespace Sanabel.Web.Areas.Identity.Pages.Account
             {
                 var user = new ApplicationUser
                 {
-                    UserName = new MailAddress(Input.Email).User,
+                    UserName = Input.Email,
                     Email = Input.Email,
                     FirstName = Input.FirstName,
-                    LastName = Input.LastName
+                    LastName = Input.LastName,
+                    FullName = Input.FullName,
+                    PhoneNumber = Input.PhoneNumber
                 };
+
 
                 // لا حاجة لإنشاء المستخدم مرة أخرى في CreateUser
                 var result = await _userManager.CreateAsync(user, Input.Password);

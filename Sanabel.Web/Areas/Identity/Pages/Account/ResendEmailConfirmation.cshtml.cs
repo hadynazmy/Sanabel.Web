@@ -63,7 +63,7 @@ namespace Sanabel.Web.Areas.Identity.Pages.Account
             }
 
             var user = await _userManager.FindByEmailAsync(Input.Email);
-            if (user == null)
+            if (user == null || await _userManager.IsEmailConfirmedAsync(user))
             {
                 ModelState.AddModelError(string.Empty, "Verification email sent. Please check your email.");
                 return Page();

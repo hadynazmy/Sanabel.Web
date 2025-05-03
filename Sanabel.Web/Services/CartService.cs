@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Sanabel.Web.Helpers
+namespace Sanabel.Web.Services
 {
     public class CartService
     {

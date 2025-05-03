@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Sanabel.Web.Data;
 using Sanabel.Web.Enum;
+using Sanabel.Web.Implementation;
 using Sanabel.Web.Models;
 using Sanabel.Web.ViewModels;
 using System.Security.Claims;
@@ -17,11 +19,15 @@ namespace Sanabel.Web.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<OrdersController> _logger;
-        public OrdersController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, ILogger<OrdersController> logger)
+        private readonly IEmailService _emailSender;
+
+        public OrdersController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, ILogger<OrdersController> logger,
+            IEmailService emailSender)
         {
             _context = context;
             _userManager = userManager;
             _logger = logger;
+            _emailSender = emailSender;
         }
 
 
@@ -289,13 +295,17 @@ namespace Sanabel.Web.Controllers
         {
             try
             {
-                var order = await _context.Orders.FindAsync(id);
+                var order = await _context.Orders.Include(x => x.User).FirstOrDefaultAsync(x => x.Id == id);
                 if (order == null)
                 {
                     _logger?.LogWarning("Order not found with ID: {OrderId}", id);
                     return NotFound();
                 }
 
+                // حفظ الحالة القديمة قبل التغيير
+                var oldStatus = order.Status;
+
+                // تغيير الحالة
                 order.Status = order.Status == OrderStatus.Accepted
                     ? OrderStatus.Rejected
                     : OrderStatus.Accepted;
@@ -304,6 +314,40 @@ namespace Sanabel.Web.Controllers
 
                 _logger?.LogInformation("Order status changed for ID: {OrderId}, New Status: {Status}",
                     id, order.Status);
+
+                // إرسال الإيميل المناسب بناءً على الحالة الجديدة
+                if (order.User != null && !string.IsNullOrEmpty(order.User.Email))
+                {
+                    string subject, message;
+
+                    if (order.Status == OrderStatus.Accepted)
+                    {
+                        subject = "تم قبول طلبك";
+                        message = $"مرحباً {order.User.FullName}،<br/><br/>" +
+                                  $"نود إعلامك أنه تم قبول طلبك رقم {order.Id}.<br/>" +
+                                  "سيتم تجهيز طلبك وإبلاغك عند شحنه.<br/><br/>" +
+                                  "شكراً لثقتك بنا!";
+                    }
+                    else
+                    {
+                        subject = "تم رفض طلبك";
+                        message = $"مرحباً {order.User.FullName}،<br/><br/>" +
+                                  $"نأسف لإبلاغك أنه تم رفض طلبك رقم {order.Id}.<br/>" +
+                                  "للاستفسار عن سبب الرفض، يرجى التواصل مع خدمة العملاء.<br/><br/>" +
+                                  "مع أطيب التحيات";
+                    }
+
+                    try
+                    {
+                        await _emailSender.SendEmailAsync(order.User.Email, subject, message);
+                        _logger?.LogInformation("Email sent successfully for order ID: {OrderId}", id);
+                    }
+                    catch (Exception emailEx)
+                    {
+                        _logger?.LogError(emailEx, "Failed to send email for order ID: {OrderId}", id);
+                        // يمكنك اختيار إرجاع خطأ أو الاستمرار رغم فشل الإيميل
+                    }
+                }
 
                 return Ok(new
                 {
@@ -317,6 +361,21 @@ namespace Sanabel.Web.Controllers
                 _logger?.LogError(ex, "Error changing status for order ID: {OrderId}", id);
                 return StatusCode(500, "حدث خطأ أثناء تغيير حالة الطلب");
             }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AcceptOrder(int id)
+        {
+            var order = await _context.Orders.Include(o => o.User).FirstOrDefaultAsync(o => o.Id == id);
+            if (order == null) return NotFound();
+
+            order.Status = OrderStatus.Accepted; // وليس "مقبولة" كـ string
+
+            await _context.SaveChangesAsync();
+
+            
+
+            return RedirectToAction("Index");
         }
 
         private bool OrderExists(int id)
