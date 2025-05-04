@@ -1,0 +1,242 @@
+﻿@model Sanabel.Web.Models.Contact
+
+@{
+    ViewData["Title"] = "اتصل بنا";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="text-center mb-0">
+                        <i class="fas fa-envelope me-2"></i> @ViewData["Title"]
+                    </h3>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <form asp-action="ContactUs" method="post" class="needs-validation" novalidate>
+                                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                                <div class="form-group mb-3">
+                                    <label asp-for="Name" class="form-label">
+                                        <i class="fas fa-user me-1"></i> الاسم الكامل
+                                    </label>
+                                    <input asp-for="Name" class="form-control" required />
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                    <div class="invalid-feedback">يرجى إدخال الاسم</div>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label asp-for="Email" class="form-label">
+                                        <i class="fas fa-envelope me-1"></i> البريد الإلكتروني
+                                    </label>
+                                    <input asp-for="Email" type="email" class="form-control" required />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                    <div class="invalid-feedback">يرجى إدخال بريد إلكتروني صحيح</div>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label asp-for="Phone" class="form-label">
+                                        <i class="fas fa-phone me-1"></i> رقم الهاتف
+                                    </label>
+                                    <input asp-for="Phone" class="form-control" required />
+                                    <span asp-validation-for="Phone" class="text-danger"></span>
+                                    <div class="invalid-feedback">يرجى إدخال رقم الهاتف</div>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label asp-for="Message" class="form-label">
+                                        <i class="fas fa-comment me-1"></i> الرسالة
+                                    </label>
+                                    <textarea asp-for="Message" class="form-control" rows="5" required></textarea>
+                                    <span asp-validation-for="Message" class="text-danger"></span>
+                                    <div class="invalid-feedback">يرجى كتابة رسالتك</div>
+                                </div>
+
+                                <div class="form-group mt-4">
+                                    <button type="submit" class="btn btn-primary w-100 py-2">
+                                        <i class="fas fa-paper-plane me-2"></i> إرسال الرسالة
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="col-lg-6 mt-4 mt-lg-0">
+                            <div class="contact-info h-100">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-body p-4">
+                                        <h4 class="mb-4 text-center">
+                                            <i class="fas fa-info-circle me-2"></i> معلومات التواصل
+                                        </h4>
+
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="card h-100 border-0">
+                                                    <div class="card-body text-center py-4">
+                                                        <div class="icon-circle bg-primary-light mb-3 mx-auto">
+                                                            <i class="fas fa-map-marker-alt fa-2x text-primary"></i>
+                                                        </div>
+                                                        <h5 class="mb-2">العنوان</h5>
+                                                        <a href="https://maps.google.com/?q=Sanabel Bakery - مخبز سنابل"
+                                                           target="_blank"
+                                                           class="text-muted text-decoration-none">
+                                                            التفتيش كفر سعد - شارع الادارة التعليمية امام محمصة جوز ولوز
+                                                        </a>
+
+
+                                                        <p class="mb-0 text-muted">
+                                                            <a href="mailto:sanabeel29@gmail.com" class="text-muted text-decoration-none">sanabeel29@gmail.com</a>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="card h-100 border-0">
+                                                    <div class="card-body text-center py-4">
+                                                        <div class="icon-circle bg-primary-light mb-3 mx-auto">
+                                                            <i class="fas fa-phone fa-2x text-primary"></i>
+                                                        </div>
+                                                        <h5 class="mb-2">الهاتف</h5>
+                                                        <p class="mb-0 text-muted">
+                                                            <a href="tel:+201110988886" class="text-muted text-decoration-none">+20 111 098 8886</a>
+                                                        </p>
+                                                       
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="card h-100 border-0">
+                                                    <div class="card-body text-center py-4">
+                                                        <div class="icon-circle bg-primary-light mb-3 mx-auto">
+                                                            <i class="fas fa-envelope fa-2x text-primary"></i>
+                                                        </div>
+                                                        <h5 class="mb-2">البريد الإلكتروني</h5>
+                                                        <p class="mb-0 text-muted">
+                                                            <a href="mailto:sanabeel29@gmail.com" class="text-muted text-decoration-none">sanabeel29@gmail.com</a>
+                                                        </p>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="card h-100 border-0">
+                                                    <div class="card-body text-center py-4">
+                                                        <div class="icon-circle bg-primary-light mb-3 mx-auto">
+                                                            <i class="fas fa-clock fa-2x text-primary"></i>
+                                                        </div>
+                                                        <h5 class="mb-2">ساعات العمل</h5>
+                                                        <p class="mb-0 text-muted">السبت - الجمعه</p>
+                                                        <p class="mb-0 text-muted">12 ص - 9 م</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="social-links mt-4 text-center">
+                                            <h5 class="mb-3">تابعنا على</h5>
+                                            <a href="https://www.facebook.com/profile.php?id=61571228597504"
+                                                target="_blank" class="btn btn-outline-primary btn-sm mx-1">
+                                                <i class="fab fa-facebook-f"></i>
+                                            </a>
+
+                                            
+                                           @*  <a href="#" class="btn btn-outline-primary btn-sm mx-1">
+                                                <i class="fab fa-instagram"></i>
+                                            </a> *@
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="map-container mt-5">
+                        <div class="ratio ratio-16x9">
+                            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3407.147785020622!2d31.68722077538212!3d31.354900824290077!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14f9e1003e8d7631%3A0x96de5410e37d2907!2zU2FuYWJlbCBCYWtlcnkgLSDZhdiu2KjYsiDYs9mG2KfYqNmE!5e0!3m2!1sar!2seg!4v1746359271754!5m2!1sar!2seg"
+                                    width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"
+                                    referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .icon-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bg-primary-light {
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+        .contact-info .card {
+            transition: transform 0.3s;
+        }
+
+            .contact-info .card:hover {
+                transform: translateY(-5px);
+            }
+
+        .social-links .btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // Example starter JavaScript for disabling form submissions if there are invalid fields
+        (function () {
+            'use strict'
+
+            // Fetch all the forms we want to apply custom Bootstrap validation styles to
+            var forms = document.querySelectorAll('.needs-validation')
+
+            // Loop over them and prevent submission
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
+}

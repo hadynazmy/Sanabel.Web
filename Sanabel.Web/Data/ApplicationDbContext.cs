@@ -31,6 +31,7 @@ namespace Sanabel.Web.Data
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<Contact> Contacts { get; set; }
 
     }
 }
