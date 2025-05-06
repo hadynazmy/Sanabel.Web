@@ -192,5 +192,58 @@ namespace Sanabel.Web.Controllers
 
             return RedirectToAction("Index", "Orders"); // التوجيه إلى صفحة الطلبات بعد الحفظ
         }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateCart(int productId, int quantity)
+        {
+            try
+            {
+                var userId = _userManager.GetUserId(User);
+
+                // تحميل السلة مع العناصر والمنتجات المرتبطة
+                var cart = await _context.Carts
+                    .Include(c => c.Items)
+                        .ThenInclude(i => i.Product) // هذه هي السطر الحاسم
+                    .FirstOrDefaultAsync(c => c.UserId == userId);
+
+                if (cart == null)
+                {
+                    return Json(new { success = false, message = "السلة غير موجودة" });
+                }
+
+                var item = cart.Items.FirstOrDefault(i => i.ProductId == productId);
+                if (item == null)
+                {
+                    return Json(new { success = false, message = "المنتج غير موجود في السلة" });
+                }
+
+                item.Quantity = quantity;
+                await _context.SaveChangesAsync();
+
+                int cartCount = cart.Items.Sum(i => i.Quantity);
+
+                // حساب الإجمالي بعد التأكد من تحميل المنتجات
+                decimal totalPrice = cart.Items
+                    .Where(i => i.Product != null) // تأكد أن المنتج غير null
+                    .Sum(i => i.Quantity * i.Product.Price);
+
+                return Json(new
+                {
+                    success = true,
+                    cartCount,
+                    totalPrice = totalPrice.ToString("0.00")
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "حدث خطأ أثناء تحديث السلة");
+                return Json(new
+                {
+                    success = false,
+                    message = "حدث خطأ أثناء تحديث السلة",
+                    error = ex.Message // إضافة رسالة الخطأ للتصحيح
+                });
+            }
+        }
     }
 }

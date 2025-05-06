@@ -1,0 +1,93 @@
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Sanabel.Web.Data;
+using Sanabel.Web.Models;
+using Sanabel.Web.ViewModels;
+using System.Security.Claims;
+
+namespace Sanabel.Web.Controllers
+{
+    [Authorize] // يتطلب تسجيل الدخول
+    public class FeedbackController : Controller
+    {
+        private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public FeedbackController(ApplicationDbContext context,
+                               UserManager<ApplicationUser> userManager)
+        {
+            _context = context;
+            _userManager = userManager;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Create()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            var model = new FeedbackViewModel
+            {
+                UserId = user.Id,
+                FullName = user.FullName,
+                ProfilePicture = user.ProfilePicture
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(FeedbackViewModel model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return View(model);
+                }
+
+                var user = await _userManager.GetUserAsync(User);
+
+                if (user == null)
+                {
+                    return RedirectToAction("Login", "Account");
+                }
+
+                var feedback = new Feedback
+                {
+                    UserId = user.Id,
+                    Message = model.Message,
+                    FullName = user.FullName ?? $"{user.FirstName} {user.LastName}",
+                    ProfilePicture = user.ProfilePicture,
+                    CreatedAt = DateTime.Now
+                };
+
+                _context.Feedbacks.Add(feedback);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "شكراً لك على تقييمك!";
+                return RedirectToAction("Index", "Home");
+            }
+            catch (Exception ex)
+            {
+                // تسجيل الخطأ
+                ModelState.AddModelError("", "حدث خطأ أثناء حفظ التقييم. يرجى المحاولة مرة أخرى.");
+                return View(model);
+            }
+        }
+
+        [AllowAnonymous] // يسمح للزوار بمشاهدة التقييمات
+        public IActionResult Index()
+        {
+            var feedbacks = _context.Feedbacks
+                .Include(f => f.User)
+                .OrderByDescending(f => f.CreatedAt)
+                .Take(10)
+                .ToList();
+
+            return View(feedbacks);
+        }
+    }
+}

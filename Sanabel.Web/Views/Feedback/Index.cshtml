@@ -1,0 +1,37 @@
+﻿@model IEnumerable<Sanabel.Web.Models.Feedback>
+
+@{
+    ViewData["Title"] = "تقييمات العملاء";
+}
+
+<div class="container py-5">
+    <h2 class="text-center mb-5">@ViewData["Title"]</h2>
+
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        @if (item.ProfilePicture != null)
+                        {
+                            <img src="data:image/jpeg;base64,@Convert.ToBase64String(item.ProfilePicture)"
+                                 class="rounded-circle mb-3" width="100" height="100" alt="@item.FullName" />
+                        }
+                        else
+                        {
+                            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3"
+                                 style="width: 100px; height: 100px;">
+                                <i class="fas fa-user fa-3x text-muted"></i>
+                            </div>
+                        }
+
+                        <h5 class="card-title">@item.FullName</h5>
+                        <p class="text-muted">@item.CreatedAt.ToString("yyyy/MM/dd")</p>
+                        <p class="card-text">@item.Message</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

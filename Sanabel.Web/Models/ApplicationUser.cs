@@ -9,7 +9,7 @@ namespace Sanabel.Web.Models
         public string FirstName { get; set; }
         [Required, MaxLength(100)]
         public string LastName { get; set; }
-        public byte[] ProfilePicture { get; set; } = new byte[0];  // تعيين قيمة افتراضية فارغة
+        public byte[] ProfilePicture { get; set; }   // تعيين قيمة افتراضية فارغة
 
         public string FullName { get; set; }
 
