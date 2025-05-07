@@ -14,9 +14,12 @@ namespace Sanabel.Web.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        public ProductsController(ApplicationDbContext context)
+        private readonly IWebHostEnvironment _webHostEnvironment;
+
+        public ProductsController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // ProductController.cs
@@ -143,10 +146,10 @@ namespace Sanabel.Web.Controllers
             return View(product);
         }
 
-       
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,ImageUrl,SubCategoryId")] Product product)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Price,ImageUrl,SubCategoryId")] Product product, IFormFile? ImageFile)
         {
             if (id != product.Id)
             {
@@ -157,6 +160,22 @@ namespace Sanabel.Web.Controllers
             {
                 try
                 {
+                    // إذا تم رفع صورة جديدة
+                    if (ImageFile != null && ImageFile.Length > 0)
+                    {
+                        var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
+                        Directory.CreateDirectory(uploadsFolder); // للتأكد من وجود المجلد
+                        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
+                        var filePath = Path.Combine(uploadsFolder, fileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImageFile.CopyToAsync(stream);
+                        }
+
+                        product.ImageUrl = "/images/" + fileName;
+                    }
+
                     _context.Update(product);
                     await _context.SaveChangesAsync();
                 }
@@ -173,6 +192,7 @@ namespace Sanabel.Web.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+
             ViewData["SubCategoryId"] = new SelectList(_context.SubCategories, "Id", "Name", product.SubCategoryId);
             return View(product);
         }

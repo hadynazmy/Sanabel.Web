@@ -28,6 +28,12 @@ namespace Sanabel.Web
                 .AddDefaultUI()
                 .AddDefaultTokenProviders();
 
+            builder.Services.Configure<IdentityOptions>(options =>
+            {
+                options.SignIn.RequireConfirmedEmail = false; // تعطيل تأكيد البريد الإلكتروني
+                options.SignIn.RequireConfirmedAccount = false; // تعطيل تأكيد الحساب
+            });
+
             // إضافة خدمة البريد الإلكتروني (EmailSender)
             builder.Services.AddScoped<IEmailService, EmailService>();
 

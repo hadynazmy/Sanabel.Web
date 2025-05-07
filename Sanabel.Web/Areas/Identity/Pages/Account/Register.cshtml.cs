@@ -106,10 +106,9 @@ namespace Sanabel.Web.Areas.Identity.Pages.Account
         // يتم استدعاؤها عند إرسال بيانات التسجيل من قبل المستخدم.
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            returnUrl ??= Url.Content("~/"); // تعيين الرابط الافتراضي إذا لم يتم تحديد رابط إعادة.
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList(); // جلب خيارات تسجيل الدخول الخارجية.
+            returnUrl ??= Url.Content("~/");
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
-            // تعديل الكود ليكون فقط مرة واحدة
             if (ModelState.IsValid)
             {
                 var user = new ApplicationUser
@@ -119,11 +118,10 @@ namespace Sanabel.Web.Areas.Identity.Pages.Account
                     FirstName = Input.FirstName,
                     LastName = Input.LastName,
                     FullName = Input.FullName,
-                    PhoneNumber = Input.PhoneNumber
+                    PhoneNumber = Input.PhoneNumber,
+                    EmailConfirmed = true // تأكيد البريد الإلكتروني تلقائيًا
                 };
 
-
-                // لا حاجة لإنشاء المستخدم مرة أخرى في CreateUser
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
@@ -132,27 +130,9 @@ namespace Sanabel.Web.Areas.Identity.Pages.Account
 
                     await _userManager.AddToRoleAsync(user, "User");
 
-                    var userId = await _userManager.GetUserIdAsync(user);
-                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                    var callbackUrl = Url.Page(
-                        "/Account/ConfirmEmail",
-                        pageHandler: null,
-                        values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
-                        protocol: Request.Scheme);
-
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
-
-                    if (_userManager.Options.SignIn.RequireConfirmedAccount)
-                    {
-                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
-                    }
-                    else
-                    {
-                        await _signInManager.SignInAsync(user, isPersistent: false);
-                        return LocalRedirect(returnUrl);
-                    }
+                    // تسجيل الدخول تلقائيًا بعد التسجيل
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    return LocalRedirect(returnUrl);
                 }
 
                 foreach (var error in result.Errors)
@@ -162,7 +142,6 @@ namespace Sanabel.Web.Areas.Identity.Pages.Account
             }
 
             return Page();
-
         }
 
         // دالة لإنشاء كائن مستخدم جديد.
