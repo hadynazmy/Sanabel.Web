@@ -7,31 +7,102 @@
 <div class="container py-5">
     <h2 class="text-center mb-5">@ViewData["Title"]</h2>
 
-    <div class="row">
-        @foreach (var item in Model)
-        {
-            <div class="col-md-4 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body text-center">
-                        @if (item.ProfilePicture != null)
-                        {
-                            <img src="data:image/jpeg;base64,@Convert.ToBase64String(item.ProfilePicture)"
-                                 class="rounded-circle mb-3" width="100" height="100" alt="@item.FullName" />
-                        }
-                        else
-                        {
-                            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3"
-                                 style="width: 100px; height: 100px;">
-                                <i class="fas fa-user fa-3x text-muted"></i>
-                            </div>
-                        }
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            لا توجد تقييمات متاحة حالياً. كن أول من يشارك رأيه!
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <!-- عرض صورة المستخدم مع التحسينات -->
+                            @if (item.User?.ProfilePicture != null || item.ProfilePicture != null)
+                            {
+                                var profilePicture = item.User?.ProfilePicture ?? item.ProfilePicture;
+                                <img src="data:image/jpeg;base64,@Convert.ToBase64String(profilePicture)"
+                                     class="rounded-circle mb-3" width="100" height="100"
+                                     alt="@(item.User?.FullName ?? item.FullName)"
+                                     style="object-fit: cover; border: 3px solid #f8f9fa;" />
+                            }
+                            else
+                            {
+                                <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3"
+                                     style="width: 100px; height: 100px; border: 3px solid #f8f9fa;">
+                                    <i class="fas fa-user fa-3x text-muted"></i>
+                                </div>
+                            }
 
-                        <h5 class="card-title">@item.FullName</h5>
-                        <p class="text-muted">@item.CreatedAt.ToString("yyyy/MM/dd")</p>
-                        <p class="card-text">@item.Message</p>
+                            <!-- عرض اسم المستخدم مع الأولوية للبيانات من جدول المستخدمين -->
+                            <h5 class="card-title">
+                                @(item.User?.FullName ?? item.FullName)
+                            </h5>
+
+                            <!-- عرض تاريخ التقييم -->
+                            <p class="text-muted small">
+                                <i class="far fa-calendar-alt"></i>
+                                @item.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+                            </p>
+
+                            <!-- عرض رسالة التقييم -->
+                            <div class="card-text bg-light p-3 rounded text-start">
+                                <i class="fas fa-quote-left text-primary me-2"></i>
+                                @item.Message
+                                <i class="fas fa-quote-right text-primary ms-2"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        }
-    </div>
+            }
+        </div>
+    }
+
+    <!-- قسم إضافة التقييم -->
+    @if (User.Identity.IsAuthenticated)
+    {
+        <div class="text-center mt-4">
+            <a asp-action="Create" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus-circle"></i> أضف تقييمك
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="text-center mt-4">
+            <p class="mb-3">تسجيل الدخول مطلوب لإضافة تقييم</p>
+            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary btn-lg">
+                <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+            </a>
+            <p class="mt-2">أو <a asp-area="Identity" asp-page="/Account/Register">أنشئ حساباً جديداً</a></p>
+        </div>
+    }
 </div>
+
+@section Styles {
+    <style>
+        .card {
+            transition: all 0.3s ease;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+            .card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            }
+
+        .card-text {
+            position: relative;
+            font-style: italic;
+        }
+
+        .fa-quote-left, .fa-quote-right {
+            opacity: 0.3;
+        }
+    </style>
+}

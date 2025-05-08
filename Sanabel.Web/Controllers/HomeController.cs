@@ -21,6 +21,12 @@ namespace Sanabel.Web.Controllers
         {
             ViewBag.TotalProducts = _context.Products.Count();
 
+            ViewBag.Feedbacks = _context.Feedbacks
+                .Include(f => f.User)
+                .OrderByDescending(f => f.CreatedAt)
+                .Take(8)
+                .ToList();
+
             int realOrdersCount = _context.Orders.Count();
             ViewBag.TotalOrders = 50 + realOrdersCount;
             return View();

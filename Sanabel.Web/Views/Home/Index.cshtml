@@ -223,53 +223,163 @@
 <div class="container-xxl bg-light my-6 py-6 pb-0">
     <div class="container">
         <div class="text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 500px;">
-            <p class="text-primary text-uppercase mb-2">// Client's Review</p>
-            <h1 class="display-6 mb-4">More Than 20000+ Customers Trusted Us</h1>
-        </div>
-        <div class="owl-carousel testimonial-carousel wow fadeInUp" data-wow-delay="0.1s">
-            <div class="testimonial-item bg-white rounded p-4">
-                <div class="d-flex align-items-center mb-4">
-                    <img class="flex-shrink-0 rounded-circle border p-1" src="img/testimonial-1.jpg" alt="">
-                    <div class="ms-4">
-                        <h5 class="mb-1">Client Name</h5>
-                        <span>Profession</span>
-                    </div>
-                </div>
-                <p class="mb-0">Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit diam amet diam et eos. Clita erat ipsum et lorem et sit.</p>
-            </div>
-            <div class="testimonial-item bg-white rounded p-4">
-                <div class="d-flex align-items-center mb-4">
-                    <img class="flex-shrink-0 rounded-circle border p-1" src="img/testimonial-2.jpg" alt="">
-                    <div class="ms-4">
-                        <h5 class="mb-1">Client Name</h5>
-                        <span>Profession</span>
-                    </div>
-                </div>
-                <p class="mb-0">Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit diam amet diam et eos. Clita erat ipsum et lorem et sit.</p>
-            </div>
-            <div class="testimonial-item bg-white rounded p-4">
-                <div class="d-flex align-items-center mb-4">
-                    <img class="flex-shrink-0 rounded-circle border p-1" src="img/testimonial-3.jpg" alt="">
-                    <div class="ms-4">
-                        <h5 class="mb-1">Client Name</h5>
-                        <span>Profession</span>
-                    </div>
-                </div>
-                <p class="mb-0">Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit diam amet diam et eos. Clita erat ipsum et lorem et sit.</p>
-            </div>
-            <div class="testimonial-item bg-white rounded p-4">
-                <div class="d-flex align-items-center mb-4">
-                    <img class="flex-shrink-0 rounded-circle border p-1" src="img/testimonial-4.jpg" alt="">
-                    <div class="ms-4">
-                        <h5 class="mb-1">Client Name</h5>
-                        <span>Profession</span>
-                    </div>
-                </div>
-                <p class="mb-0">Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit diam amet diam et eos. Clita erat ipsum et lorem et sit.</p>
-            </div>
+            <p class="text-primary text-uppercase mb-2">// آراء العملاء</p>
+            <h1 class="display-6 mb-4">آراء عملائنا الكرام</h1>
         </div>
 
-        
+        @if (ViewBag.Feedbacks != null && ((System.Collections.IList)ViewBag.Feedbacks).Count > 0)
+        {
+            <div class="position-relative wow fadeInUp" data-wow-delay="0.2s">
+                <div class="owl-carousel testimonial-carousel">
+                    @foreach (var feedback in ViewBag.Feedbacks)
+                    {
+                        <div class="testimonial-item bg-white rounded p-4">
+                            <div class="d-flex align-items-center mb-4">
+                                @{
+                                    string displayName = "عميلنا الكريم";
+
+                                    if (feedback.User != null)
+                                    {
+                                        if (!string.IsNullOrWhiteSpace(feedback.User.FullName))
+                                        {
+                                            displayName = feedback.User.FullName;
+                                        }
+                                        else if (!string.IsNullOrWhiteSpace(feedback.User.FirstName) || !string.IsNullOrWhiteSpace(feedback.User.LastName))
+                                        {
+                                            displayName = $"{feedback.User.FirstName} {feedback.User.LastName}".Trim();
+                                        }
+                                    }
+                                    else if (!string.IsNullOrWhiteSpace(feedback.FullName))
+                                    {
+                                        displayName = feedback.FullName;
+                                    }
+                                }
+
+                                @* عرض الصورة أو الأفاتار *@
+                                @if (feedback.User != null)
+                                {
+                                    if (feedback.User.ProfilePicture != null)
+                                    {
+                                        <img class="flex-shrink-0 rounded-circle border p-1"
+                                             src="data:image/jpeg;base64,@Convert.ToBase64String(feedback.User.ProfilePicture)"
+                                             alt="@displayName"
+                                             style="width: 80px; height: 80px; object-fit: cover;">
+                                    }
+                                    else
+                                    {
+                                        <img class="flex-shrink-0 rounded-circle border p-1"
+                                             src="~/images/avatar.png"
+                                             alt="Avatar"
+                                             style="width: 80px; height: 80px; object-fit: cover;">
+                                    }
+                                }
+                                else if (feedback.ProfilePicture != null)
+                                {
+                                    <img class="flex-shrink-0 rounded-circle border p-1"
+                                         src="data:image/jpeg;base64,@Convert.ToBase64String(feedback.ProfilePicture)"
+                                         alt="@displayName"
+                                         style="width: 80px; height: 80px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <div class="flex-shrink-0 rounded-circle border p-1 bg-light d-flex align-items-center justify-content-center"
+                                         style="width: 80px; height: 80px;">
+                                        <i class="fas fa-user fa-2x text-muted"></i>
+                                    </div>
+                                }
+
+                                <div class="ms-4">
+                                    <h5 class="mb-1">@displayName</h5>
+                                    <span class="text-muted small">عميلنا الكريم</span>
+                                </div>
+                            </div>
+                            <p class="mb-0">
+                                <i class="fas fa-quote-left text-primary me-2"></i>
+                                @feedback.Message
+                                <i class="fas fa-quote-right text-primary ms-2"></i>
+                            </p>
+                            <div class="text-end mt-2">
+                                <small class="text-muted">@feedback.CreatedAt.ToString("yyyy/MM/dd")</small>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info text-center wow fadeInUp" data-wow-delay="0.1s">
+                لا توجد تقييمات متاحة حالياً. كن أول من يشارك رأيه!
+            </div>
+        }
+
+        <!-- زر "أضف تقييمك" -->
+        <div class="text-center my-5 wow fadeInUp" data-wow-delay="0.3s">
+            <a asp-controller="Feedback" asp-action="Create" class="btn btn-outline-primary rounded-pill px-5 py-2">
+                <i class="fas fa-comment-dots me-2"></i> أضف تقييمك
+            </a>
+        </div>
     </div>
 </div>
 <!-- Testimonial End -->
+
+@section Scripts {
+    <script>
+        $(document).ready(function(){
+            // تهيئة Owl Carousel
+            var testimonialCarousel = $('.testimonial-carousel').owlCarousel({
+                loop: true,
+                margin: 20,
+                nav: false,
+                dots: false,
+                autoplay: true,
+                autoplayTimeout: 5000,
+                smartSpeed: 1000,
+                responsive: {
+                    0: {
+                        items: 1
+                    },
+                    768: {
+                        items: 2
+                    },
+                    992: {
+                        items: 3
+                    }
+                }
+            });
+
+            // التحكم بالسهم الأيمن
+            $('.testimonial-next').click(function() {
+                testimonialCarousel.trigger('next.owl.carousel');
+            });
+
+            // التحكم بالسهم الأيسر
+            $('.testimonial-prev').click(function() {
+                testimonialCarousel.trigger('prev.owl.carousel');
+            });
+        });
+    </script>
+
+    <style>
+        .testimonial-nav button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+            .testimonial-nav button:hover {
+                transform: scale(1.1);
+                background-color: #0b5ed7 !important;
+            }
+
+        .testimonial-item {
+            transition: all 0.3s ease;
+        }
+
+            .testimonial-item:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+    </style>
+}

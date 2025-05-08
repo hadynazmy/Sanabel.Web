@@ -1,5 +1,6 @@
-﻿﻿@* Views/Products/Index.cshtml *@
+﻿@* Views/Products/Index.cshtml *@
 @model IEnumerable<Sanabel.Web.Models.Product>
+
 @{
     ViewData["Title"] = "قائمة المنتجات";
 
@@ -64,19 +65,15 @@
 </div>
 
 <!-- عرض المنتجات -->
-<div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-4">
+<div class="row row-cols-2 row-cols-md-3 g-4">
     @foreach (var item in Model)
     {
         <div class="col">
             <div class="card h-100 shadow-sm">
-                @if (!string.IsNullOrEmpty(item.ImageUrl))
-                {
-                    <img src="@item.ImageUrl" class="card-img-top" alt="@item.Name" style="height: 250px; object-fit: cover;" />
-                }
-                else
-                {
-                    <img src="~/img/no-image.png" class="card-img-top" alt="No Image" style="height: 250px; object-fit: cover;" />
-                }
+                <img src="@(!string.IsNullOrEmpty(item.ImageUrl) ? item.ImageUrl : Url.Content("~/img/no-image.png"))"
+                     class="card-img-top"
+                     alt="@item.Name"
+                     style="height: 250px; object-fit: cover;" />
 
                 <div class="card-body text-center">
                     <h5 class="card-title">@item.Name</h5>
@@ -93,14 +90,12 @@
                         </button>
                     }
 
-                    <!-- زر إضافة إلى السلة (بدون Refresh) -->
                     <button type="button"
                             class="btn btn-sm btn-outline-success"
                             title="أضف إلى السلة"
                             onclick="addToCart(@item.Id)">
                         <i class="bi bi-cart-plus"></i>
                     </button>
-
                 </div>
 
                 <!-- Modal الحذف -->
@@ -141,7 +136,7 @@
                     <a class="page-link"
                        asp-action="Index"
                        asp-route-page="@i"
-                       var currentSubCategoryId=ViewBag.CurrentSubCategoryId !=null ? Convert.ToInt32(ViewBag.CurrentSubCategoryId) : 0;
+                       asp-route-subCategoryId="@(currentSubCategoryId ?? 0)"
                        asp-route-searchTerm="@searchTerm">
                         @i
                     </a>

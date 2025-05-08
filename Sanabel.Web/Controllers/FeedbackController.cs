@@ -9,7 +9,6 @@ using System.Security.Claims;
 
 namespace Sanabel.Web.Controllers
 {
-    [Authorize] // يتطلب تسجيل الدخول
     public class FeedbackController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -23,21 +22,14 @@ namespace Sanabel.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Create()
+        [Authorize] // يتطلب تسجيل الدخول
+        public IActionResult Create()
         {
-            var user = await _userManager.GetUserAsync(User);
-
-            var model = new FeedbackViewModel
-            {
-                UserId = user.Id,
-                FullName = user.FullName,
-                ProfilePicture = user.ProfilePicture
-            };
-
-            return View(model);
+            return View(new FeedbackViewModel());
         }
 
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FeedbackViewModel model)
         {
@@ -49,10 +41,22 @@ namespace Sanabel.Web.Controllers
                 }
 
                 var user = await _userManager.GetUserAsync(User);
-
                 if (user == null)
                 {
                     return RedirectToAction("Login", "Account");
+                }
+
+                byte[] profilePicture = user.ProfilePicture;
+
+                // لو المستخدم مش حاطط صورة، نقرأ صورة افتراضية من wwwroot/images/avatar.png
+                if (profilePicture == null)
+                {
+                    var avatarPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "avatar.png");
+
+                    if (System.IO.File.Exists(avatarPath))
+                    {
+                        profilePicture = await System.IO.File.ReadAllBytesAsync(avatarPath);
+                    }
                 }
 
                 var feedback = new Feedback
@@ -60,7 +64,7 @@ namespace Sanabel.Web.Controllers
                     UserId = user.Id,
                     Message = model.Message,
                     FullName = user.FullName ?? $"{user.FirstName} {user.LastName}",
-                    ProfilePicture = user.ProfilePicture,
+                    ProfilePicture = profilePicture,
                     CreatedAt = DateTime.Now
                 };
 
@@ -72,7 +76,6 @@ namespace Sanabel.Web.Controllers
             }
             catch (Exception ex)
             {
-                // تسجيل الخطأ
                 ModelState.AddModelError("", "حدث خطأ أثناء حفظ التقييم. يرجى المحاولة مرة أخرى.");
                 return View(model);
             }
